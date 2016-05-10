@@ -5,12 +5,8 @@ exports.setup = function(runningApp, callback) {
   runningApp.disable("x-powered-by");
 
   // Choose your favorite view engine(s)
+  runningApp.set('views', __dirname+'/lib/');
   runningApp.set('view engine', 'jade');
-  runningApp.engine('handlebars', require('hbs').__express);
-
-  //// you could use two view engines in parallel (if you are brave):
-  // runningApp.set('view engine', 'j2');
-  // runningApp.engine('j2', require('swig').renderFile);
 
 
   //---- Mounting well-encapsulated application modules (so-called: "mini-apps")
@@ -18,7 +14,7 @@ exports.setup = function(runningApp, callback) {
   //runningApp.use('/hello', require('hello')); // attach to sub-route
 
   // API endpoint attached to root route:
-  runningApp.use('/', require('homedoc')); // attach to root route
+  runningApp.use('/', require('index')); // attach to root route
 
   if(typeof callback === 'function') {
     callback(runningApp);
