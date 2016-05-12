@@ -2,18 +2,12 @@ doctype html
 html(lang="en")
 head
   meta(charset="utf-8")
-  meta(name="viewport" content="width=device-width, initial-scale=1")
-  title test
+  meta(name="viewport",content="width=device-width, initial-scale=1")
+  //- title test
 
-  link(href="/bower_components/bootstrap/dist/css/bootstrap.min.css" media="all" rel="stylesheet")
-  link(href="/css/app.css" media="all" rel="stylesheet")
-body(lang="en")
-
-  header(id="layout-marker") Layout Loaded
-
-  div(id="canvas" class="container")
+  link(href="/css/app.css",rel="stylesheet")
+body
+  div.container
     block content
 
 script(src="/js/ios-orientationchange-fix.js")
-script(src="/bower_components/jquery/jquery.min.js")
-script(src="/bower_components/bootstrap/dist/js/bootstrap.min.js")
