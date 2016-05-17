@@ -60,12 +60,19 @@ let deptsAdd = (i, row, dept_names) => {
 		dept_names.push(row[1]);
 		let temp_date = new Date(row[0]);
 		let year = temp_date.getFullYear();
+		year += '';
 		let temp = {
 			name: row[1],
-			years: {}
+			keys: [],
+			years: []
 		};
-		temp['years'][year] = [];
-		temp['years'][year].push(obj_dept);
+		// temp['years'][year] = [];
+		// temp['years'][year].push(obj_dept);
+		let temp_obj = {};
+		temp_obj[year] = [];
+		temp_obj[year].push(obj_dept);
+		temp['years'].push(temp_obj);
+		temp['keys'].push(year);
  		let mongo_dept = new Departments(temp);
 		mongo_dept.save((err)=>{
 			if (err){
@@ -80,25 +87,46 @@ let deptsAdd = (i, row, dept_names) => {
 			}
 			let temp_date = new Date(row[0]);
 			let year = temp_date.getFullYear();
-			if (dept.name == 'Бухгалтерия'){
+			year += '';
+			if (dept.keys.includes(year)){
+				let pos = dept.keys.indexOf(year);
 				console.log(dept['years']);
-				console.log('nachalo');
+				dept['years'][pos][year].push(obj_dept);
 			}
-			
-			if (dept['years'][year] == undefined) {
-				// console.log(dept['years'][year]);
-				dept['years'][year] = [];
+			else{
+				let temp_obj = {};
+				temp_obj[year] = [];
+				temp_obj[year].push(obj_dept);
+				dept['years'].push(temp_obj);
+				dept['keys'].push(year);
+				console.log(dept);
 			}
-			dept['years'][year].push(obj_dept);
-			if (dept.name == 'Бухгалтерия'){
-				console.log(dept['years']);
-				console.log('konec');
-			}
-			dept.save((err)=>{
+			 dept.save((err)=>{
+
 				if (err){
-					throw new Error('Whoops');
+					console.log(dept);
+					throw new Error(err);
 				}
 			})
+			// if (dept['years'][year] == undefined) {
+			// 	// console.log(dept['years'][year]);
+			// 	dept['years'][year] = [];
+			// }
+			// dept['years'][year].push(obj_dept);
+			// if (dept['years'][year] == undefined){
+			// 	dept['years'][year] = [];
+			// 	dept['years'][year].push(obj_dept);
+			// }
+			// let path = 'years.' + year;
+			// dept.markModified(path);
+			// dept.save((err)=>{
+
+			// 	if (err){
+			// 		console.log(dept);
+			// 		throw new Error(err);
+			// 	}
+			// 	console.log(dept);
+			// })
 		});
 	}
 };
