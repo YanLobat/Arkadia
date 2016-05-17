@@ -10,36 +10,41 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var core_1 = require('@angular/core');
 var http_1 = require('@angular/http');
-require('rxjs/add/operator/map');
-var Api = (function () {
-    function Api(http) {
-        this.http = http;
+var api_1 = require('./api');
+var Item = (function () {
+    function Item(_id, name, price, total_quanity, purchases) {
+        this._id = _id;
+        this.name = name;
+        this.price = price;
+        this.total_quanity = total_quanity;
+        this.purchases = purchases;
     }
-    Api.prototype.topItems = function () {
-        var endpoint = 'http://localhost:3000/';
-        return this.http
-            .get(endpoint, {})
-            .map(function (res) { return res.json().response.docs; });
-    };
-    return Api;
+    return Item;
 }());
+exports.Item = Item;
 var AppItems = (function () {
     function AppItems(api) {
         this.api = api;
     }
     AppItems.prototype.ngOnInit = function () {
-        this.items = this.api.topItems();
+        this.topItems();
+    };
+    AppItems.prototype.topItems = function () {
+        var _this = this;
+        this.api.topItems()
+            .subscribe(function (items) { return _this.items = items; }, function (error) { return _this.errorMessage = error; });
+        console.log(this.items);
     };
     AppItems = __decorate([
         core_1.Component({
             selector: 'top-items',
-            template: "<ul>\n                <li *ngFor=\"let item of items | async\"> {{item.name}} </li>\n             </ul>",
-            providers: [http_1.HTTP_PROVIDERS, Api],
+            templateUrl: "/",
+            template: "<ul>\n                <li *ngFor=\"let item of items\">\n\n                \t<h2>{{item.name}}</h2>\n\t\t \t\t\t<p> {{item.price}} \u0440\u0443\u0431.</p>\n\t\t\t\t\t<p> {{item.total_quanity}} \u0448\u0442.</p>\n\t\t\t\t\t<ol>\n\t\t\t\t\t\t<li *ngFor=\"let purchase of item.purchases \">\n\t\t \t\t\t\t\t\t<p> {{purchase.date}}</p>\n\t\t \t\t\t\t\t\t<p> {{purchase.department}}</p>\n\t\t \t\t\t\t\t\t<p> {{purchase.quanity}}</p>\n\t\t \t\t\t\t</li>\n\t\t \t\t\t</ol>\n             </ul>",
+            providers: [http_1.HTTP_PROVIDERS, api_1.Api],
         }), 
-        __metadata('design:paramtypes', [Api])
+        __metadata('design:paramtypes', [api_1.Api])
     ], AppItems);
     return AppItems;
 }());
 exports.AppItems = AppItems;
-core_1.enableProdMode();
 //# sourceMappingURL=app.items.js.map

@@ -1,15 +1,4 @@
 extends ../../../views/layout
 
 block content
-	div=departments.length
-	ol
-		each department,i in departments
-			li
-				p #{department.name}
-				div
-					each purchase in department.purchases
-						ul
-							li #{purchase.date}
-							li #{purchase.item}
-							li #{purchase.price}
-							li #{purchase.quanity}
+	my-app Loading...

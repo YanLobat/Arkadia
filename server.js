@@ -58,11 +58,15 @@ let deptsAdd = (i, row, dept_names) => {
 	};
 	if (!dept_names.includes(row[1])){
 		dept_names.push(row[1]);
+		let temp_date = new Date(row[0]);
+		let year = temp_date.getFullYear();
 		let temp = {
 			name: row[1],
-			purchases: obj_dept
+			years: {}
 		};
-		let mongo_dept = new Departments(temp);
+		temp['years'][year] = [];
+		temp['years'][year].push(obj_dept);
+ 		let mongo_dept = new Departments(temp);
 		mongo_dept.save((err)=>{
 			if (err){
 				return;
@@ -74,7 +78,22 @@ let deptsAdd = (i, row, dept_names) => {
 			if (err){
 				throw new Error('Whoops');
 			}
-			dept.purchases.push(obj_dept);
+			let temp_date = new Date(row[0]);
+			let year = temp_date.getFullYear();
+			if (dept.name == 'Бухгалтерия'){
+				console.log(dept['years']);
+				console.log('nachalo');
+			}
+			
+			if (dept['years'][year] == undefined) {
+				// console.log(dept['years'][year]);
+				dept['years'][year] = [];
+			}
+			dept['years'][year].push(obj_dept);
+			if (dept.name == 'Бухгалтерия'){
+				console.log(dept['years']);
+				console.log('konec');
+			}
 			dept.save((err)=>{
 				if (err){
 					throw new Error('Whoops');
