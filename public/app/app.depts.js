@@ -55,7 +55,7 @@ var AppDepts = (function () {
     AppDepts = __decorate([
         core_1.Component({
             selector: 'depts',
-            template: "<ul>\n                <li *ngFor=\"let dept of depts\">\n\n                \t<h2>{{dept.name}}</h2>\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li *ngFor=\"let year of dept.years | keys \">\n\t\t\t\t\t\t\t{{ year.key }}\t\n\t\t\t\t\t\t\t<ol>\n\t\t\t\t\t\t\t\t<li *ngFor=\"let purchase of generateArray(year)\">\n\t\t\t\t\t\t\t\t\t<p>{{purchase.date}}</p>\n\t\t\t\t\t\t\t\t\t<p>{{purchase.item}}</p>\n\t\t\t\t\t\t\t\t\t<p>{{purchase.price}}</p>\n\t\t\t\t\t\t\t\t\t<p>{{purchase.quanity}}</p>\n\t\t\t\t\t\t\t\t</li>\n\t\t\t\t\t\t\t</ol>\t \t\t\t\t\n\t\t\t\t\t\t</li>\n\t\t \t\t\t</ul>\n             </ul>",
+            template: "<ul>\n                <li *ngFor=\"let dept of depts\">\n\n                \t<h2>{{dept.name}}</h2>\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li *ngFor=\"let year of dept.years | keys \">\n\t\t\t\t\t\t\t<details>\n\t\t\t\t\t\t\t<summary>{{ year.key }}</summary>\t\n\t\t\t\t\t\t\t<ol>\n\t\t\t\t\t\t\t\t<li *ngFor=\"let purchase of year.value\">\n\t\t\t\t\t\t\t\t\t<p>{{purchase.date}}</p>\n\t\t\t\t\t\t\t\t\t<p>{{purchase.item}}</p>\n\t\t\t\t\t\t\t\t\t<p>{{purchase.price}}</p>\n\t\t\t\t\t\t\t\t\t<p>{{purchase.quanity}}</p>\n\t\t\t\t\t\t\t\t</li>\n\t\t\t\t\t\t\t</ol>\n\t\t\t\t\t\t\t</details>\t \t\t\t\t\n\t\t\t\t\t\t</li>\n\t\t \t\t\t</ul>\n             </ul>",
             providers: [http_1.HTTP_PROVIDERS, api_1.Api],
             pipes: [KeysPipe]
         }), 

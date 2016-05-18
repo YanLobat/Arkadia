@@ -30,15 +30,17 @@ export class Dept {
                 	<h2>{{dept.name}}</h2>
 					<ul>
 						<li *ngFor="let year of dept.years | keys ">
-							{{ year.key }}	
+							<details>
+							<summary>{{ year.key }}</summary>	
 							<ol>
-								<li *ngFor="let purchase of generateArray(year)">
+								<li *ngFor="let purchase of year.value">
 									<p>{{purchase.date}}</p>
 									<p>{{purchase.item}}</p>
 									<p>{{purchase.price}}</p>
 									<p>{{purchase.quanity}}</p>
 								</li>
-							</ol>	 				
+							</ol>
+							</details>	 				
 						</li>
 		 			</ul>
              </ul>`, 
