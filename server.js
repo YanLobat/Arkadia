@@ -1,8 +1,11 @@
 require('app-module-path').addPath(__dirname + '/lib');
-const Baby = require('babyparse');
 const server = require('nodebootstrap-server');
 const appConfig = require('./appConfig');
 let app = require('express')();
+let fs = require('fs')
+    , util = require('util')
+    , stream = require('stream')
+    , es = require('event-stream');
 let Items = require('./lib/items/models/items.js');
 let Departments = require('./lib/departments/models/departments.js');
 let mongoose = require('mongoose');
@@ -107,11 +110,31 @@ Items.remove({},(err) => {
 		}
 		let item_names = []; //just temp var
 		let dept_names = []; //just temp var
-		for (let i = 0; i < rows.length; i++){  //don't use forEach to avoid callback hell :)
-			let row = rows[i];
-			itemsAdd(i, row, item_names);
-			deptsAdd(i, row, dept_names);
-		}
+		let s = fs.createReadStream('test.csv')
+		    .pipe(es.split())
+		    .pipe(es.mapSync((line) => {
+
+		        // pause the readstream
+		        s.pause();
+		        itemsAdd(i, line, item_names);
+				deptsAdd(i, line, dept_names);
+		        lineNr += 1;
+
+		        // process line here and call s.resume() when rdy
+		        // function below was for logging memory usage
+		        logMemoryUsage(lineNr);
+
+		        // resume the readstream, possibly from a callback
+		        s.resume();
+		    })
+		    .on('error', function(){
+		        console.log('Error while reading file.');
+		    })
+		    .on('end', function(){
+		        console.log('Read entire file.')
+		    })
+		);
 	});
 });
+
 
