@@ -15,7 +15,7 @@ app = require('nodebootstrap-htmlapp').setup(app);
 
 server.setup(app, appConfig.setup);
 
-let itemsAdd = (i, row, item_names) => {
+let itemsAdd = (row, item_names) => {
 	let obj_item = {
 		date: row[0],
 		department: row[1],
@@ -52,7 +52,7 @@ let itemsAdd = (i, row, item_names) => {
 	}
 };
 
-let deptsAdd = (i, row, dept_names) => {
+let deptsAdd = (row, dept_names) => {
 	let temp_date = new Date(row[0]);
 	let year = temp_date.getFullYear();
 	let obj_dept = {
@@ -92,14 +92,7 @@ let deptsAdd = (i, row, dept_names) => {
 		});
 	}
 };
-
-// Parse single file
-let parsed = Baby.parseFiles('test.csv');
-
-let rows = parsed.data;
-if (rows[rows.length-1] == ''){
-	rows.length--;
-}
+let lineNr = 0;
 Items.remove({},(err) => {
 	if (err){
 		throw new Error('Whoops');
@@ -116,13 +109,10 @@ Items.remove({},(err) => {
 
 		        // pause the readstream
 		        s.pause();
-		        itemsAdd(i, line, item_names);
-				deptsAdd(i, line, dept_names);
+		        let row = line.split(',');
+		        itemsAdd(row, item_names);
+				deptsAdd(row, dept_names);
 		        lineNr += 1;
-
-		        // process line here and call s.resume() when rdy
-		        // function below was for logging memory usage
-		        logMemoryUsage(lineNr);
 
 		        // resume the readstream, possibly from a callback
 		        s.resume();

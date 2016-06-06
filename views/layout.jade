@@ -11,10 +11,18 @@ head
   script(src="node_modules/reflect-metadata/Reflect.js")
   script(src="node_modules/systemjs/dist/system.src.js")
   script(src="systemjs.config.js")
+  <!-- 2. Configure SystemJS -->
+  script(src="/js/systemjs.config.js")
   script.
     System.import('app').catch(function(err){ console.error(err); });
 body
-  div.container
-    block content
+  my-app
+    div.container
+      block content
 
 script(src="/js/ios-orientationchange-fix.js")
+script(src="node_modules/angular2/bundles/angular2-polyfills.js")
+script(src="node_mobules/systemjs/dist/system.src.js")
+script(src="node_mobules/rxjs/bundles/Rx.js")
+script(src="node_mobules/angular2/bundles/angular2.dev.js")
+script(src="node_mobules/angular2/bundles/router.dev.js")
