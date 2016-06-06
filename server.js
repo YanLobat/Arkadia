@@ -2,10 +2,12 @@ require('app-module-path').addPath(__dirname + '/lib');
 const server = require('nodebootstrap-server');
 const appConfig = require('./appConfig');
 let app = require('express')();
+let LineInputStream = require("line-input-stream");
 let fs = require('fs')
     , util = require('util')
     , stream = require('stream')
-    , es = require('event-stream');
+    , es = require('event-stream')
+    , async = require('async');
 let Items = require('./lib/items/models/items.js');
 let Departments = require('./lib/departments/models/departments.js');
 let mongoose = require('mongoose');
@@ -29,25 +31,23 @@ let itemsAdd = (row, item_names) => {
 			purchases: obj_item,
 			total_quanity: row[4]
 		};
-		let mongo_item = new Items(temp);
-		mongo_item.save((err)=>{
-			if (err){
-				throw new Error('Whoops');
-			}
-		});
+		return temp;
 	}
 	else{
 		Items.findOne({name: row[2]}, (err,item) => {
 			if (err){
 				throw new Error('Whoops');
 			}
-			item.purchases.push(obj_item);
-			item.total_quanity += parseInt(row[4]);
-			item.save((err)=>{
-				if (err){
-					throw new Error('Whoops');
-				}
-			})
+			if (item){
+				item.purchases.push(obj_item);
+				item.total_quanity += parseInt(row[4]);
+				item.save((err)=>{
+					if (err){
+						throw new Error('Whoops');
+					}
+					return 0;
+				})
+			}
 		});
 	}
 };
@@ -93,6 +93,7 @@ let deptsAdd = (row, dept_names) => {
 	}
 };
 let lineNr = 0;
+let counter = 0;
 Items.remove({},(err) => {
 	if (err){
 		throw new Error('Whoops');
@@ -103,27 +104,56 @@ Items.remove({},(err) => {
 		}
 		let item_names = []; //just temp var
 		let dept_names = []; //just temp var
-		let s = fs.createReadStream('test.csv')
-		    .pipe(es.split())
-		    .pipe(es.mapSync((line) => {
+		let bulk = Items.collection.initializeUnorderedBulkOp();
+		let stream = LineInputStream(fs.createReadStream('test.csv',{flags: "r"}));
+		stream.setDelimiter("\n");
+		stream.on("error",function(err) {
+	        console.log(err); // or otherwise deal with it
+	    });
+		stream.on("line",function(line) {
 
-		        // pause the readstream
-		        s.pause();
-		        let row = line.split(',');
-		        itemsAdd(row, item_names);
-				deptsAdd(row, dept_names);
-		        lineNr += 1;
-		        console.log(lineNr+' '+row);
-		        // resume the readstream, possibly from a callback
-		        s.resume();
-		    })
-		    .on('error', function(){
-		        console.log('Error while reading file.');
-		    })
-		    .on('end', function(){
-		        console.log('Read entire file.')
-		    })
-		);
+	        async.series(
+	            [
+	                function(callback) {
+	                    var row = line.split(",");     // split the lines on delimiter
+	                    let item  = itemsAdd(row, item_names);          
+	                    // other manipulation
+	                    if (item)
+	                    	bulk.insert(item);  // Bulk is okay if you don't need schema
+	                                       // defaults. Or can just set them.
+
+	                    counter++;
+	                    console.log(counter);
+	                    if ( counter % 1000 == 0 ) {
+	                        bulk.execute(function(err,result) {
+	                            if (err) {
+	                            	console.log(result);
+	                            	throw err;   // or do something
+	                           	}
+	                            // possibly do something with result
+	                            bulk = Items.collection.initializeUnorderedBulkOp();
+	                            callback();
+	                        });
+	                    } else {
+	                        callback();
+	                    }
+	               }
+	           ],
+	           function (err) {
+	               // each iteration is done
+	           }
+	       );
+
+	    });
+	    stream.on("end",function() {
+
+	        if ( counter % 1000 != 0 ){
+	            bulk.execute(function(err,result) {
+	                if (err) throw err;   // or something
+	                // maybe look at result
+	            });
+	        }
+	    });
 	});
 });
 
