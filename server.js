@@ -113,7 +113,7 @@ Items.remove({},(err) => {
 		        itemsAdd(row, item_names);
 				deptsAdd(row, dept_names);
 		        lineNr += 1;
-
+		        console.log(lineNr+' '+row);
 		        // resume the readstream, possibly from a callback
 		        s.resume();
 		    })
