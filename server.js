@@ -149,7 +149,7 @@ Items.remove({},(err) => {
 				}
 
 				this.lineNr++;
-				console.log(this.lineNr);
+				console.log(this.insert);
 				if ((this.lineNr % 3000 === this.capacity) && (this.bulk.length > 0)){
 					this.insert(this,this.coll, done)
 
