@@ -1,5 +1,5 @@
 require('app-module-path').addPath(__dirname + '/lib');
-require('v8-profiler');
+// require('v8-profiler');
 const server = require('nodebootstrap-server');
 const appConfig = require('./appConfig');
 let app = require('express')();
@@ -65,37 +65,17 @@ Items.remove({},(err) => {
 		if (err){
 			throw new Error('Whoops');
 		}
-		const readableStream = fs.createReadStream('test.csv',{encoding: 'utf-8'});
-		const Transform = require('stream').Transform;
-		const myTransform = new Transform({
-			readableObjectMode: true,
-
-			transform(chunk, encoding, callback) {
-				let row = chunk.toString().split(",");// split the lines on delimiter
-				this.push(row);
-			    // Push the data onto the readable queue.
-			    callback();
-			}
-		});
-
-		myTransform.setEncoding('utf8');
 		const stream = require('stream'); 
-		class Bulker extends stream.Writable {
-			constructor(coll, capacity=3000) {
-
-					super({ objectMode: true });
-					this.lineNr = 0;
-					this.encoding = 'utf-8';
-					this.coll = coll;
-
-					this.bulk = coll.initializeOrderedBulkOp();
-
-					this.capacity = capacity;
-					this.item_names = [];
-					this.dept_names = [];
-
+		let readableStream = fs.createReadStream('test.csv', 'utf-8');
+		let liner = es.split();
+		class MyTransform extends stream.Transform {
+			constructor() {
+				super({readableObjectMode: true, writableObjectMode: true});
+				this.item_names = [];
+				this.dept_names = [];
+				this.counter = 0;
 			}
-			itemsAdd(row, item_names) {
+			itemsFilter(row, item_names, done) {
 				let obj_item = {
 					date: row[0],
 					department: row[1],
@@ -106,97 +86,71 @@ Items.remove({},(err) => {
 					let temp = {
 						name: row[2],
 						price: row[3],
-						purchases: obj_item,
+						purchases: [],
 						total_quanity: row[4]
 					};
-					return temp;
+					temp.purchases.push(obj_item);
+					this.push(temp);
+					return done();
 				}
-				else{
+				else{		
 					Items.findOne({name: row[2]}, (err,item) => {
 						if (err){
-							throw new Error('Whoops');
+							return done(err);
 						}
 						if (!item){
-							return 0;
+							return done();
 						}
 						item.purchases.push(obj_item);
 						item.total_quanity += parseInt(row[4]);
-						return item;
-						item.save((err)=>{
-							if (err){
-								throw new Error('Whoops');
-							}
-							return 0;
-						})
+						this.push(item);
+						return done();
 					});
 				}
+
 			}
-			insert(that, coll, done) {
-				that.bulk.execute((err,result) => {
-					if (err) throw err;   // or do something
-					// possibly do something with result
-					that.bulk = that.coll.initializeOrderedBulkOp();
-					
-					done();
+			_transform(chunk, _, done) {
+				console.log(this.counter++);
+				let itemArray = chunk.split(",");// split the lines on delimiter
+				this.itemsFilter(itemArray, this.item_names, done);//check will it be a new item 
+			}
+		}
+		class Bulker extends stream.Writable {
+			constructor(coll, capacity) {
+					super({ objectMode: true });
+					this.coll = coll;
+					this.counter = 0;
+					this.bulk = this.coll.initializeOrderedBulkOp();
+					this.capacity = capacity;
+			}
+			insert(done) {
+				this.bulk.execute((err,result) => {
+					if (err) return done(err); 
+					this.bulk = this.coll.initializeOrderedBulkOp();	
+					return done();
 				});	
 			}
-			_write(item, encoding, done) {
-				item.toString();
-				let obj = this.itemsAdd(item, this.item_names);            
-				// other manipulation
-				if (obj){
-					this.bulk.find( { name: obj.name } ).upsert().update({'$set': obj}); 
-				}
-
-				this.lineNr++;
-				console.log(this.insert);
-				if ((this.lineNr % 3000 === this.capacity) && (this.bulk.length > 0)){
-					this.insert(this,this.coll, done)
-
+			_write(item, _, done) {
+				this.bulk.find( { name: item.name } ).upsert().update({'$set': item}); 
+				this.counter++;
+				
+				if (this.counter % this.capacity == 0) {
+					this.insert(done);
 				} 
-				else {
-					done();
-				}
+				return done();
 			}
-			end(item, encoding, done) {
-				item.toString();
-				let obj = itemsAdd(item, this.item_names);            
-				// other manipulation
-				if (obj){
-					this.bulk.find( { name: obj.name } ).upsert().update({'$set': obj}); 
-				}
-
-				this.lineNr++;
-
-				if ((this.lineNr % 3000 === this.capacity) && (this.bulk.length > 0)){
-					this.insert(this,this.coll, done)
-
-				} 
-				else{
-					done();
-				} 
+			end(item, _, done) {
+				console.log('here we go');
+				this.insert(done);
+				return done();
 			}
 
 		}
+		let transformer = new MyTransform();
 		let bulker = new Bulker(Items.collection, 3000);
-		readableStream.on('readable', write);
-		function write() {
-			let chunk;
-			while (null !== (chunk = readableStream.read())) {
-				console.log(chunk);
-				chunk.toString();
-				if (chunk && !bulker._write(chunk)){
-					readableStream.removeListener('readable', write);
-					bulker.once('drain', () => {
-						readableStream.on('readable', write);
-						write();
-					});
-				}
-			}
-		}
 		readableStream
-		.pipe(es.split())
-		.pipe(myTransform)
+		.pipe(liner)
+		.pipe(transformer)
 		.pipe(bulker)
 		.on('error', function(){
 			console.log('Error while reading file.');
