@@ -90,21 +90,25 @@ Items.remove({},(err) => {
 						total_quanity: row[4]
 					};
 					temp.purchases.push(obj_item);
-					this.push({'item': temp});
-					return done();
+					this.push({item: temp});
+					return;
+					// return done();
 				}
 				else{		
 					Items.findOne({name: row[2]}, (err,item) => {
 						if (err){
-							return done(err);
+							return;
+							// return done(err);
 						}
 						if (!item){
-							return done();
+							return;
+							// return done();
 						}
 						item.purchases.push(obj_item);
 						item.total_quanity += parseInt(row[4]);
-						this.push({'item': item});
-						return done();
+						this.push({item: item});
+						return;
+						// return done();
 					});
 				}
 
@@ -126,16 +130,19 @@ Items.remove({},(err) => {
 						purchases: []
 					};
 					temp.purchases.push(obj_dept);
-			 		this.push(temp);
+			 		this.push({dept: temp});
 			 		return done();
 				}
 				else{
 					Departments.findOne({name: row[1]}, (err,dept) => {
 						if (err){
-							throw new Error(err);
+							return done(err);
+						}
+						if (!dept){
+							return done();
 						}
 						dept.purchases.push(obj_dept);
-						this.push(dept);
+						this.push({dept: dept});
 						return done();
 					});
 				}
@@ -144,6 +151,7 @@ Items.remove({},(err) => {
 				console.log(this.counter++);
 				let itemArray = chunk.split(",");// split the lines on delimiter
 				this.itemsFilter(itemArray, this.item_names, done);//check will it be a new item 
+				this.deptsFilter(itemArray, this.dept_names, done);//check will it be a new dept 
 			}
 		}
 		class Bulker extends stream.Writable {
@@ -151,12 +159,13 @@ Items.remove({},(err) => {
 					super({ objectMode: true });
 					this.coll = coll;
 					this.coll2 = coll2;
-					this.counter = 0;
+					this.itemsCounter = 0;
+					this.deptsCounter = 0;
 					this.items = this.coll.initializeOrderedBulkOp();
 					this.depts = this.coll2.initializeOrderedBulkOp();
 					this.capacity = capacity;
 			}
-			insert(done) {
+			insertItems(done) {
 				this.items.execute((err,result) => {
 					if (err) return done(err); 
 					this.items = this.coll.initializeOrderedBulkOp();
@@ -166,17 +175,38 @@ Items.remove({},(err) => {
 						return;
 				});	
 			}
+			insertDepts(done) {
+				this.depts.execute((err,result) => {
+					if (err) return done(err); 
+					this.items = this.coll2.initializeOrderedBulkOp();
+					if (typeof done == 'Function')	
+						return done();
+					else {
+						console.log('end');
+						return;
+					}
+				});	
+			}
 			_write(element, _, done) {
-				this.items.find( { name: element.item.name } ).upsert().update({'$set': element.item}); 
-				this.counter++;
-				console.log(this.counter);
-				if (this.counter % this.capacity == 0) {
-					this.insert(done);
+				if (element.item !== undefined) {
+					this.items.find( { name: element.item.name } ).upsert().update({'$set': element.item}); 
+					this.itemsCounter++;
+				}
+				else {
+					this.depts.find( { name: element.dept.name } ).upsert().update({'$set': element.dept}); 
+					this.deptsCounter++;
+				}
+				console.log(this.itemsCounter);
+				if (this.itemsCounter % this.capacity == 0 && element.item !== undefined) {
+					this.insertItems(done);
+				} 
+				if (this.deptsCounter % this.capacity == 0 && element.dept !== undefined) {
+					this.insertDepts(done);
 				} 
 				return done();
 			}
 			end(item, _, done) {
-				return this.insert(done);
+				return this.insertItems(done);
 			}
 
 		}
