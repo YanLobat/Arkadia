@@ -165,11 +165,14 @@ Items.remove({},(err) => {
 					this.depts = this.coll2.initializeOrderedBulkOp();
 					this.capacity = capacity;
 			}
-			insertItems(done) {
+			insertItems(done, _) {
 				this.items.execute((err,result) => {
 					if (err) return done(err); 
 					this.items = this.coll.initializeOrderedBulkOp();
-					if (typeof done == 'Function')	
+					if (_ === 'end') {
+						return this.insertDepts(done);
+					}	
+					if (typeof done == 'Function') 	
 						return done();
 					else
 						return;
@@ -191,22 +194,25 @@ Items.remove({},(err) => {
 				if (element.item !== undefined) {
 					this.items.find( { name: element.item.name } ).upsert().update({'$set': element.item}); 
 					this.itemsCounter++;
+					console.log(this.itemsCounter);
 				}
 				else {
 					this.depts.find( { name: element.dept.name } ).upsert().update({'$set': element.dept}); 
 					this.deptsCounter++;
+					console.log(this.deptsCounter);
 				}
-				console.log(this.itemsCounter);
+				// console.log(this.itemsCounter);
 				if (this.itemsCounter % this.capacity == 0 && element.item !== undefined) {
 					this.insertItems(done);
 				} 
 				if (this.deptsCounter % this.capacity == 0 && element.dept !== undefined) {
+					
 					this.insertDepts(done);
 				} 
 				return done();
 			}
 			end(item, _, done) {
-				return this.insertItems(done);
+				return this.insertItems(done, 'end');
 			}
 
 		}
