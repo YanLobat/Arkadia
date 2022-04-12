@@ -15,7 +15,7 @@
   "dependencies": {
     "angular2": "^2.0.0-beta.17",
     "app-module-path": "^1.0.4",
-    "async": "^2.0.0-rc.5",
+    "async": "^3.2.2",
     "babyparse": "^0.4.6",
     "body-parser": "^1.14.1",
     "config": "*",
@@ -28,12 +28,12 @@
     "line-input-stream": "^1.0.1",
     "lodash": "^4.3.0",
     "metalogger": "*",
-    "mongoose": "^4.4.16",
+    "mongoose": "^5.7.3",
     "nodebootstrap-htmlapp": "*",
     "nodebootstrap-server": "*",
     "reflect-metadata": "^0.1.2",
     "rxjs": "^5.0.0-beta.6",
-    "tsd": "^0.6.5",
+    "tsd": "^0.7.0",
     "typescript": "^1.8.10",
     "yaml": "*",
     "zone.js": "^0.6.12"
